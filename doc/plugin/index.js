@@ -44,12 +44,54 @@ const autoDoc = declare((api, options, dirname) => {
                     }),
                     return: resolveType(path.get('returnType').getTypeAnnotation()),
                     doc: path.node.leadingComments && docResolve(path.node.leadingComments[0].value)
-                })
+                });
+                state.file.set('docs', docs);
+            },
+            ClassDeclaration(path, state) {
+                const docs = state.file.get('docs');
+                console.log(path.get('id').toString());
+                const classInfo = {
+                    type: 'class',
+                    name: path.get('id').toString(),
+                    constructorInfo: {},
+                    methodsInfo: [],
+                    propertiesInfo: []
+                }
+                path.traverse({
+                    ClassMethod(path, state) {
+                        // 表示contructor
+                        if (path.node.kind === 'constructor') {
+                            classInfo.constructorInfo = {
+                                params: path.get('params').map(paramPath => ({
+                                    name: paramPath.toString(),
+                                    type: resolveType(paramPath.getTypeAnnotation())
+                                })),
+                                doc: docResolve(path.node.leadingComments[0].value)
+                            }
+                        } else {
+                            classInfo.methodsInfo.push({
+                                type: 'classMethod',
+                                name: path.get('key').toString(),
+                                params: path.get('params').map(paramPath => ({
+                                    name: paramPath.toString(),
+                                    type: resolveType(paramPath.getTypeAnnotation())
+                                })),
+                                return: resolveType(path.get('returnType').getTypeAnnotation()),
+                                doc: docResolve(path.node.leadingComments[0].value)
+                            
+                            })
+                        }
+                    }
+                });
+                docs.push(classInfo);
+                state.file.set('docs', docs);
+
             }
+
         },
         post(file) {
             const docs = file.get('docs');
-            console.log(JSON.stringify(docs))
+            console.log(JSON.stringify(docs));
         }
     }
 });

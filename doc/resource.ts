@@ -10,7 +10,7 @@
 /**
  * 类测试
  */
-class Guang {
+class Test {
     name: string; // name 属性
     constructor(name: string) {
         this.name = name;
